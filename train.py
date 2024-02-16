@@ -21,8 +21,8 @@ from torch.optim.lr_scheduler import StepLR
 
 from data_factory import create_dataset
 from utils import AverageMeter, accuracy, ProgressMeter
+from utils.loss import MyLoss
 
-from Loss import DisLoss, DivLoss
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('-data', default='freplus', metavar='DatasetName',
@@ -168,15 +168,14 @@ def main_worker(gpu, ngpus_per_node, args):
         model = torch.nn.DataParallel(model).cuda()
 
     # define loss function (criterion) and optimizer
-    criterion = {'entropy': nn.CrossEntropyLoss().cuda(args.gpu),
-                 'dis': DisLoss().cuda(args.gpu),
-                 'div': DivLoss().cuda(args.gpu)}
+    criterion = {'class': nn.CrossEntropyLoss().cuda(args.gpu),
+                 'alphas': MyLoss().cuda(args.gpu)}
 
     # optimizer = sgd_optimizer(model, args.lr, args.momentum, args.weight_decay)
 
     optimizer = optim.SGD(params=model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
 
-    lr_scheduler = CosineAnnealingLR(optimizer, T_max=args.epochs, last_epoch=-1)
+    lr_scheduler = StepLR(optimizer, step_size=20, last_epoch=-1)
     # optionally resume from DTD checkpoint
     if args.resume:
         if os.path.isfile(args.resume):
@@ -279,12 +278,10 @@ def train(train_loader, model, criterion, optimizer, epoch, args, lr_scheduler):
         if torch.cuda.is_available():
             target = target.cuda(args.gpu, non_blocking=True)
 
-            # compute output
-        with autocast():
-            output, xx_list, x_local = model(images)
-            dis_loss = criterion['dis'](xx_list[0]) + criterion['dis'](xx_list[1]) + criterion['dis'](xx_list[2]) + \
-                       criterion['dis'](xx_list[3])
-            loss = criterion['entropy'](output, target) + dis_loss + 20 * criterion['div'](xx_list)
+        output, xx_list, x_local = model(images)
+        dis_loss = criterion['dis'](xx_list[0]) + criterion['dis'](xx_list[1]) + criterion['dis'](xx_list[2]) + \
+                   criterion['dis'](xx_list[3])
+        loss = criterion['entropy'](output, target) + dis_loss + 20 * criterion['div'](xx_list)
         # measure accuracy and record loss
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
         losses.update(loss.item(), images.size(0))
