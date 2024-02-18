@@ -1,13 +1,7 @@
 import torch.nn as nn
-from block.acb import ACBlock
-from block.dbb import DiverseBranchBlock
-from block.dacS import DACBlockS
 from block.dac import DACBlock
-from block.dacC import DACBlockC
-from block.dcb import Dynamic_conv2d
-from block.dcd import DCDBlock
 
-CONV_BN_IMPL = 'base'
+CONV_BN_IMPL = 'DACB'
 
 
 def conv(in_channels, out_channels, kernel_size, stride, padding, bias, groups=1, dilation=1):
@@ -22,7 +16,7 @@ def conv(in_channels, out_channels, kernel_size, stride, padding, bias, groups=1
         blk_type = DCDBlock
     elif CONV_BN_IMPL == 'DACB-S':
         blk_type = DACBlockS
-    elif CONV_BN_IMPL == 'DACBS':
+    elif CONV_BN_IMPL == 'DACB':
         blk_type = DACBlock
     elif CONV_BN_IMPL == 'DACB-C':
         blk_type = DACBlockC

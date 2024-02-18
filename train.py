@@ -23,7 +23,6 @@ from data_factory import create_dataset
 from utils import AverageMeter, accuracy, ProgressMeter
 from utils.loss import MyLoss
 
-
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('-data', default='freplus', metavar='DatasetName',
                     help='path to dataset')
@@ -74,7 +73,6 @@ parser.add_argument('--multiprocessing-distributed', action='store_true',
 best_acc1 = 0
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2,3'
-scaler = GradScaler()
 
 
 def main():
@@ -270,7 +268,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, lr_scheduler):
     model.train()
 
     end = time.time()
-    for i, (images, target) in enumerate(train_loader):
+    for i, (images, crop, target) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
         if args.gpu is not None:
@@ -278,10 +276,9 @@ def train(train_loader, model, criterion, optimizer, epoch, args, lr_scheduler):
         if torch.cuda.is_available():
             target = target.cuda(args.gpu, non_blocking=True)
 
-        output, xx_list, x_local = model(images)
-        dis_loss = criterion['dis'](xx_list[0]) + criterion['dis'](xx_list[1]) + criterion['dis'](xx_list[2]) + \
-                   criterion['dis'](xx_list[3])
-        loss = criterion['entropy'](output, target) + dis_loss + 20 * criterion['div'](xx_list)
+        output, alphas_part_max, alphas_org = model(images, crop)
+
+        loss = criterion['entropy'](output, target) + criterion['alphas'](alphas_part_max, alphas_org)
         # measure accuracy and record loss
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
         losses.update(loss.item(), images.size(0))
@@ -290,28 +287,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args, lr_scheduler):
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
-        # loss.backward()
-        # optimizer.step()
-        scaler.scale(loss).backward()
-        scaler.step(optimizer)
-        scaler.update()
-
-        # compute output
-        #         output, xx_list, x_local = model(images)
-        #         dis_loss = criterion['dis'](xx_list[0]) + criterion['dis'](xx_list[1]) + criterion['dis'](xx_list[2]) + \
-        #                    criterion['dis'](xx_list[3])
-        #         loss = criterion['entropy'](output, target) + dis_loss + 20 * criterion['div'](xx_list)
-        #         # measure accuracy and record loss
-        #         acc1, acc5 = accuracy(output, target, topk=(1, 5))
-        #         losses.update(loss.item(), images.size(0))
-        #         top1.update(acc1[0], images.size(0))
-        #         top5.update(acc5[0], images.size(0))
-
-        #         # compute gradient and do SGD step
-        #         # if (i + 1) % 2 == 0:
-        #         optimizer.zero_grad()
-        #         loss.backward()
-        #         optimizer.step()
+        loss.backward()
+        optimizer.step()
 
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -345,10 +322,9 @@ def validate(epoch, val_loader, model, criterion, args):
                 target = target.cuda(args.gpu, non_blocking=True)
 
             # compute output
-            output, xx_list, x_local = model(images)
-            dis_loss = criterion['dis'](xx_list[0]) + criterion['dis'](xx_list[1]) + criterion['dis'](xx_list[2]) + \
-                       criterion['dis'](xx_list[3])
-            loss = criterion['entropy'](output, target) + dis_loss + 20 * criterion['div'](xx_list)
+            output, alphas_part_max, alphas_org = model(images)
+
+            loss = criterion['entropy'](output, target) + criterion['alphas'](alphas_part_max, alphas_org)
             # measure accuracy and record loss
             acc1, acc5 = accuracy(output, target, topk=(1, 5))
             losses.update(loss.item(), images.size(0))
