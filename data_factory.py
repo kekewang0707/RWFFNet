@@ -3,56 +3,40 @@ import os
 from torchvision import datasets
 from torchvision.transforms import transforms
 
+from datasets.custom_dataset import CubDataset
+
 CIFAR10_PATH = 'CIFAR-10'
 IMAGENET_PATH = 'imagenet'
 IMAGENET100_PATH = 'imagenet100'
 CIFAR100_PATH = 'CIFAR-100'
-FREPlus_PATH = 'data'
+CUB_PATH = 'cub'
 PASCALVOC07_PATH = 'pascal voc2007'
 
 
 def create_dataset(dataset_name, subset):
-    assert dataset_name in ['cifar10', 'imagenet', 'cifar100', 'imagenet100', 'freplus', 'pascal voc2007']
+    assert dataset_name in ['cub', 'imagenet', 'cifar100', 'imagenet100', 'freplus', 'pascal voc2007']
     assert subset in ['train', 'val']
 
-    if dataset_name == 'freplus':
+    if dataset_name == 'cub':
         if subset == 'train':
-            return datasets.ImageFolder(os.path.join(FREPlus_PATH, 'Training'),
-                                        transform=transforms.Compose([
-                                            transforms.RandomResizedCrop(224),
-                                            transforms.RandomHorizontalFlip(),
-                                            transforms.ToTensor(),
-                                            transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                                                 std=[0.229, 0.224, 0.225]),
-                                        ]))
+            return CubDataset('data/bird_train.txt', CUB_PATH,
+                              enhance_transform=transforms.Compose([transforms.Resize(448)]),
+                              co_transform=transforms.Compose([transforms.ToTensor(),
+                                                               transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                                                                    std=[0.229, 0.224, 0.225])]),
+                              crop_transform=transforms.Compose([transforms.FiveCrop(224)]),
+                              training=True
+                              )
         else:
-            return datasets.ImageFolder(os.path.join(FREPlus_PATH, 'PublicTest'),
-                                        transform=transforms.Compose([
-                                            transforms.Resize(256),
-                                            transforms.CenterCrop(224),
-                                            transforms.ToTensor(),
-                                            transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                                                 std=[0.229, 0.224, 0.225]),
-                                        ]))
-    elif dataset_name == 'pascal07':
-        if subset == 'train':
-            return datasets.VOCDetection(PASCALVOC07_PATH, year='2007', image_set="train",
-                                         transform=transforms.Compose([
-                                             transforms.Resize(256),
-                                             transforms.RandomCrop(224),
-                                             transforms.RandomHorizontalFlip(),
-                                             transforms.ToTensor(),
-                                             transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
-                                         ]))
-        else:
-            return datasets.VOCDetection(PASCALVOC07_PATH, year='2007', image_set="val",
-                                         transform=transforms.Compose([
-                                             transforms.Resize(256),
-                                             transforms.CenterCrop(224),
-                                             transforms.ToTensor(),
-                                             transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
-                                         ]))
-    if dataset_name == 'imagenet100':
+            return CubDataset('data/bird_test.txt', CUB_PATH,
+                              enhance_transform=transforms.Compose([transforms.Resize(448)]),
+                              co_transform=transforms.Compose([transforms.ToTensor(),
+                                                               transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                                                                    std=[0.229, 0.224, 0.225])]),
+                              crop_transform=transforms.Compose([transforms.FiveCrop(224)]),
+                              training=False
+                              )
+    elif dataset_name == 'imagenet100':
         if subset == 'train':
             return datasets.ImageFolder(os.path.join(IMAGENET100_PATH, 'train'),
                                         transform=transforms.Compose([
