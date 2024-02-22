@@ -45,7 +45,7 @@ def switch_conv_bn_impl(block_type):
         print("通道注意力")
 
 
-def build_model(arch, data):
+def build_model(data):
     if data == 'imagenet':
         num_classes = 1000
     elif data == 'cifar10':
@@ -54,42 +54,7 @@ def build_model(arch, data):
         num_classes = 200
     else:
         num_classes = 100
-    if arch == 'MobileNet':
-        from mobilenet import create_MobileNet
-        model = create_MobileNet(num_classes=num_classes)
-    elif arch == 'DyResNet-10':
-        from model.resnet import resnet10
-        model = resnet10(num_classes=num_classes)
-    elif arch == 'DyResNet-18':
-        from model.resnet import resnet18
-        model = resnet18(num_classes=num_classes)
-    elif arch == 'DyResNet-34':
-        from model.resnet import resnet34
-        model = resnet34(num_classes=num_classes)
-    elif arch == 'DyResNet-14':
-        from model.resnet import resnet14
-        model = resnet14(num_classes=num_classes)
-    elif arch == 'DyResNet-26':
-        from model.resnet import resnet26
-        model = resnet26(num_classes=num_classes)
-    elif arch == 'DyResNet-50':
-        from model.resnet import resnet50
-        model = resnet50(num_classes=num_classes)
-    elif arch == 'DyResNet-101':
-        from model.resnet import resnet101
-        model = resnet101(num_classes=num_classes)
-    elif arch == 'MixResNet-26':
-        from mix_resnet import resnet26
-        model = resnet26(num_classes=num_classes)
-    elif arch == 'MobileNet-V3':
-        from mobilenet_v3 import mobilenet_v3_small
-        model = mobilenet_v3_small(num_classes=num_classes)
-    elif arch == 'DenseNet':
-        from model.densenet import densenet121
-        model = densenet121(num_classes=num_classes)
-    elif arch == 'AlexNet':
-        from model.alexnet import alexnet
-        model = alexnet(num_classes=num_classes)
-    else:
-        raise ValueError('TODO')
+    from model.RWFFNet import RWFFNet
+    model = RWFFNet(num_classes=num_classes)
+    model.resnet.load_state_dict(torch.load(''), strict=False)
     return model

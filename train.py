@@ -20,11 +20,11 @@ import torch.utils.data.distributed
 from torch.optim.lr_scheduler import StepLR
 
 from data_factory import create_dataset
-from utils import AverageMeter, accuracy, ProgressMeter
+from utils import AverageMeter, accuracy, ProgressMeter, convnet_utils
 from utils.loss import MyLoss
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-parser.add_argument('-data', default='freplus', metavar='DatasetName',
+parser.add_argument('-data', default='Cub', metavar='DatasetName',
                     help='path to dataset')
 parser.add_argument('-j', '--workers', default=8, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
@@ -133,7 +133,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     #   =========================== build model
     # model is backbone
-    model = MyNet()
+    model = convnet_utils.build_model(args.data)
     if gpu == 0:
         for name, param in model.named_parameters():
             print(name, param.size())
