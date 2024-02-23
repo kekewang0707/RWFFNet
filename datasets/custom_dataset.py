@@ -39,10 +39,10 @@ class CubDataset(Dataset):
 
         if self.enhance_transform:
             image = self.enhance_transform(image)
-        crop = self.crop_transform(image)
+
         if self.co_transform:
             image = self.co_transform(image)
-            crop = self.co_transform(crop)
+        crop = self.crop_transform(image)
         return image, crop, label
 
 
@@ -58,7 +58,7 @@ def test_dataset():
     ])
     co_transform = transforms.Compose([transforms.ToTensor(),
                                        transforms.Normalize(rgb_mean, rgb_std), ])
-    corp_transform = transforms.Compose([transforms.FiveCrop(size * 0.7)])
+    corp_transform = transforms.Compose([transforms.FiveCrop(224)])
     carData = CubDataset(txt, root, enhance_transform, co_transform, corp_transform, True)
     dataloader = DataLoader(carData, batch_size=16, shuffle=True)
     for data in dataloader:

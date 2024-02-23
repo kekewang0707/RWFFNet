@@ -20,8 +20,9 @@ import torch.utils.data.distributed
 from torch.optim.lr_scheduler import StepLR
 
 from data_factory import create_dataset
-from utils import AverageMeter, accuracy, ProgressMeter, convnet_utils
-from utils.loss import MyLoss
+from utils import convnet_utils
+from utils.utils import AverageMeter, accuracy, ProgressMeter
+from utils import loss
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('-data', default='Cub', metavar='DatasetName',
@@ -32,7 +33,7 @@ parser.add_argument('--epochs', default=50, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=256, type=int,
+parser.add_argument('-b', '--batch-size', default=8, type=int,
                     metavar='N',
                     help='mini-batch size (default: 256), this is the total '
                          'batch size of all GPUs on the current node when '
@@ -167,7 +168,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # define loss function (criterion) and optimizer
     criterion = {'class': nn.CrossEntropyLoss().cuda(args.gpu),
-                 'alphas': MyLoss().cuda(args.gpu)}
+                 'alphas': loss.MyLoss().cuda(args.gpu)}
 
     # optimizer = sgd_optimizer(model, args.lr, args.momentum, args.weight_decay)
 
@@ -273,6 +274,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, lr_scheduler):
         data_time.update(time.time() - end)
         if args.gpu is not None:
             images = images.cuda(args.gpu, non_blocking=True)
+            crop = crop.cuda(args.gpu, non_blocking=True)
         if torch.cuda.is_available():
             target = target.cuda(args.gpu, non_blocking=True)
 

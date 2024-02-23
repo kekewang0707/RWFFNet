@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import resnet
+import model.resnet as resnet
 import torch.nn.functional as F
 import numpy as np
 from torch.autograd import Variable

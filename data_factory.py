@@ -9,18 +9,18 @@ CIFAR10_PATH = 'CIFAR-10'
 IMAGENET_PATH = 'imagenet'
 IMAGENET100_PATH = 'imagenet100'
 CIFAR100_PATH = 'CIFAR-100'
-CUB_PATH = 'cub'
+CUB_PATH = 'CUB_200_2011/images'
 PASCALVOC07_PATH = 'pascal voc2007'
 
 
 def create_dataset(dataset_name, subset):
-    assert dataset_name in ['cub', 'imagenet', 'cifar100', 'imagenet100', 'freplus', 'pascal voc2007']
+    assert dataset_name in ['Cub', 'imagenet', 'cifar100', 'imagenet100', 'freplus', 'pascal voc2007']
     assert subset in ['train', 'val']
 
-    if dataset_name == 'cub':
+    if dataset_name == 'Cub':
         if subset == 'train':
             return CubDataset('data/bird_train.txt', CUB_PATH,
-                              enhance_transform=transforms.Compose([transforms.Resize(448)]),
+                              enhance_transform=transforms.Compose([transforms.Resize((448,448))]),
                               co_transform=transforms.Compose([transforms.ToTensor(),
                                                                transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                                                                     std=[0.229, 0.224, 0.225])]),
